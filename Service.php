@@ -13,9 +13,6 @@ namespace Box\Mod\Serversync;
 class Service implements \FOSSBilling\InjectionAwareInterface
 {
     protected ?\Pimple\Container $di;
-    const KEYS = ['username'];
-    const CLIENT_KEYS = ['email'];
-    const ORDER_KEYS = ['status'];
 
     public function setDi(\Pimple\Container $di): void
     {
@@ -49,26 +46,21 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $servers;
     }
 
-    public function getHostingServerAccounts($id): array
+    public function getHostingServerAccounts(int $serverId): array
     {
-        $hostingServerModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $id, 'Server not found');
+        $hostingServerModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $serverId, 'Server not found');
         $serverManager = $this->getHostingServerManager($hostingServerModel);
         
         if (!$this->hostingServerManagerSupportsSync($serverManager)) {
             throw new \Box_Exception('This server manager does not support synchronizing accounts');
         }
 
-        $serverAccounts = $serverManager->listAccounts();
+        $remoteServerAccounts = $serverManager->listAccounts();
 
-        return $this->getMatchingHostingAccounts($id, $serverAccounts);
-    }
-
-    private function getMatchingHostingAccounts($serverId, $serverAccounts): array
-    {
         $hostingAccounts = [];
 
-        foreach ($serverAccounts as $serverAccount) {
-            $fossbillingHostingAccountModel = $this->di['db']->findOne('ServiceHosting', 'service_hosting_server_id = ? AND username = ?', [$serverId, $serverAccount['username']]);
+        foreach ($remoteServerAccounts as $remoteServerAccount) {
+            $fossbillingHostingAccountModel = $this->di['db']->findOne('ServiceHosting', 'service_hosting_server_id = ? AND username = ?', [$serverId, $remoteServerAccount['username']]);
             $hostingService = $this->di['mod_service']('servicehosting');
 
             // Kind of messy, but it seems like the only way for now
@@ -80,10 +72,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
             }
             
             $hostingAccounts[] = [
-                'server' => $serverAccount,
+                'server' => $remoteServerAccount,
                 'fossbilling' => $fossbillingHostingAccount,
                 'suggested_actions' => $this->suggestActions([
-                    'server' => $serverAccount,
+                    'server' => $remoteServerAccount,
                     'fossbilling' => $fossbillingHostingAccount,
                 ]),
             ];
@@ -97,10 +89,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $hostingAccounts;
     }
 
-    public function suggestActions($hostingAccount): array
+    public function suggestActions(array $hostingAccounts): array
     {
-        $fossbillingHostingAccount = $hostingAccount['fossbilling'];
-        $serverAccount = $hostingAccount['server'];
+        $fossbillingHostingAccount = $hostingAccounts['fossbilling'];
+        $serverAccount = $hostingAccounts['server'];
 
         $suggested = [];
 
