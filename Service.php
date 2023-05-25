@@ -132,14 +132,14 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         if ($fossbillingHostingAccount['order']['status'] === \Model_ClientOrder::STATUS_SUSPENDED && $serverAccount['status'] === \Model_ClientOrder::STATUS_ACTIVE) {
             $suggested[] = [
                 'id' => 'unsuspend',
-                'label' => 'Unsuspend the account',
+                'label' => 'Mark the account unsuspended',
             ];
         }
 
         if ($fossbillingHostingAccount['order']['status'] === \Model_ClientOrder::STATUS_ACTIVE && $serverAccount['status'] === \Model_ClientOrder::STATUS_SUSPENDED) {
             $suggested[] = [
                 'id' => 'suspend',
-                'label' => 'Suspend the account',
+                'label' => 'Mark the account suspended',
             ];
         }
 
