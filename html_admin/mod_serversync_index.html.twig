@@ -1,0 +1,37 @@
+{% extends 'mod_serversync_wizard.html.twig' %}
+
+{# Step 1 #}
+{% block wizard_content %}
+	<div class="hr-text hr-text-center hr-text-spaceless">{{ 'Choose a server' | trans }}</div>
+	<div class="card-body">
+		<div class="table-responsive">
+			<table class="table table-vcenter">
+				<thead>
+					<tr>
+						<th>{{ 'Name' | trans }}</th>
+						<th>{{ 'Manager' | trans }}</th>
+						<th class="w-1"></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for server in servers %}
+						<tr>
+							<td>{{ server.name }}</td>
+							<td class="text-muted">
+								{{ server.manager.label }}
+							</td>
+							<td>
+								{% if server.manager.supports_sync %}
+									<a href="{{ '/serversync/review/' | alink }}/{{ server.id }}">{{ 'Continue' | trans }}</a>
+								{% else %}
+									<span class="text-muted">{{ 'Unsupported' | trans }}</span>
+								{% endif %}
+							</td>
+							{% else %}
+						{% endfor %}
+					</tbody>
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock %}

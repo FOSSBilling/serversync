@@ -1,0 +1,90 @@
+{% extends 'mod_serversync_wizard.html.twig' %}
+
+{# Step 2 #}
+{% block wizard_content %}
+	<div class="hr-text hr-text-center hr-text-spaceless">{{ 'Review the accounts' | trans }}</div>
+	<div class="card-body text-center">
+		{% for server in servers|filter((server) => server.id == server_id) -%}
+			<div class="form-check form-switch text-start">
+				<input class="form-check-input" type="checkbox" id="hide-existing-accounts" checked>
+				<label class="form-check-label" for="hide-existing-accounts">{{ 'Hide the accounts that are already synchronized' | trans }}</label>
+			</div>
+			{% set accounts = admin.serversync_get_hosting_server_accounts({ 'id': server.id }) %}
+			<div class="table-responsive">
+				<table class="table table-vcenter table-bordered card-table">
+					<thead>
+						<tr>
+							<th colspan="3">{{ server.manager.label }}</th>
+							<th colspan="3">{{ 'FOSSBilling' | trans }}</th>
+							<th rowspan="2">{{ 'Action' | trans }}</th>
+						</tr>
+						<tr>
+							{# Hosting server #}
+							<th>{{ 'Username' | trans }}</th>
+							<th>{{ 'Email' | trans }}</th>
+							<th>{{ 'Status' | trans }}</th>
+							{# FOSSBilling #}
+							<th>{{ 'Username' | trans }}</th>
+							<th>{{ 'Email' | trans }}</th>
+							<th>{{ 'Status' | trans }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for account in accounts %}
+							{% set needs_to_be_synced = account.suggested_actions | length > 0 %}
+							<tr
+								class="{{ needs_to_be_synced ? '' : 'table-success' }}">
+								{# Hosting server #}
+								<td>{{ account.server.username }}</td>
+								<td>{{ account.server.email }}</td>
+								<td>{{ account.server.status|title }}</td>
+								{# FOSSBilling #}
+								{% if account.fossbilling.username is null %}
+									<td class="table-secondary" colspan="3">{{ 'Not linked to any FOSSBilling account.' | trans }}</td>
+								{% else %}
+									<td>{{ account.fossbilling.username }}</td>
+									<td>{{ account.fossbilling.client.email }}</td>
+									<td>{{ account.fossbilling.order.status|title }}</td>
+								{% endif %}
+								<td>
+									{% if needs_to_be_synced %}
+										<select name="actions[{{ account.server.username }}]" class="form-select">
+											{% for action in account.suggested_actions %}
+												<option value="{{ action.id }}">{{ action.label }}</option>
+											{% endfor %}
+											<option value="ignore">{{ 'Ignore' | trans }}</option>
+										</select>
+									{% endif %}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% else %}
+			<p class="text-center">{{ 'A server with the given ID (' ~ server_id ~ ') does not exist.' | trans }}</p>
+		{% endfor %}
+	</div>
+{% endblock %}
+
+{% block js %}
+	{{ parent() }}
+	<script>
+	var hideExistingAccounts = document.getElementById('hide-existing-accounts');
+
+	function hideExistingAccountsChangeHandler() {
+		var tableSuccessRows = document.querySelectorAll('tr.table-success');
+		for (var i = 0; i < tableSuccessRows.length; i++) {
+			if (hideExistingAccounts.checked) {
+				tableSuccessRows[i].style.display = 'none';
+			} else {
+				tableSuccessRows[i].style.display = '';
+			}
+		}
+	}
+
+	hideExistingAccountsChangeHandler();
+
+	hideExistingAccounts.addEventListener('change', hideExistingAccountsChangeHandler);
+	</script>
+{% endblock %}

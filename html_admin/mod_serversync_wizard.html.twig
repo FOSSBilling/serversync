@@ -1,0 +1,49 @@
+{% extends "layout_default.html.twig" %}
+
+{% block meta_title %}{{ 'Server synchronization wizard' | trans }}{% endblock %}
+
+{% set active_menu = 'settings' %}
+{% set servers = admin.serversync_get_hosting_servers %}
+
+{% block content %}
+	<div>
+		<div class="container {{ container_size }}">
+			<div class="card card-md">
+				<div class="card-body text-center py-4 p-sm-5">
+					<span class="status status-blue">{{ 'Beta' | trans }}</span>
+					<h1>{{ 'Server sync wizard' | trans }}</h1>
+					<p class="text-muted">{{ 'Use this wizard to import the existing accounts on your hosting server with FOSSBilling.' | trans }}</p>
+				</div>
+				{% block wizard_content %}{% endblock %}
+			</div>
+			<div class="row align-items-center mt-4">
+				<div class="col-4">
+					<div class="progress">
+						<div class="progress-bar" style="width: {{ progress }}%" role="progressbar" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ progress }}% Complete">
+							<span class="visually-hidden">{{ progress }}% Complete</span>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="btn-list justify-content-end">
+						{% if go_back_url %}
+							<a href="{{ go_back_url }}" class="btn btn-link link-secondary">
+								{{ 'Go back' | trans }}
+							</a>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+			{% if display_disclaimers %}
+				<div class="text-muted">
+					<p class="hr-text hr-text-center">{{ 'Disclaimers' | trans }}</p>
+					<ul>
+						<li>{{ 'This wizard is currently in beta and may not work as expected. Please report any issues you find to the FOSSBilling team.' | trans }}</li>
+						<li>{{ 'You are heavily encouraged to take a full backup of your FOSSBilling installation before running this wizard.' | trans }}</li>
+						<li>{{ 'The wizard currently only works one way, from the server to FOSSBilling. It will not sync accounts from FOSSBilling to the server.' | trans }}</li>
+					</ul>
+				</div>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
