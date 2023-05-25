@@ -24,6 +24,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $this->di;
     }
 
+    /**
+     * Get the list of hosting servers and information about their server managers
+     * @return array An array of hosting servers
+     */
     public function getHostingServers(): array
     {
         $service = $this->di['mod_service']('servicehosting');
@@ -46,6 +50,16 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $servers;
     }
 
+    /**
+     * Get the hosting accounts and matching FOSSBilling accounts (if any) for a given hosting server
+     *
+     * @param int $serverId The ID of the hosting server
+     * @return array An array of hosting accounts. The array contains the following keys:
+     * - server: The account on the hosting server
+     * - fossbilling: The FOSSBilling account that matches the hosting account, if any. Matching is done by usernames.
+     * - suggested_actions: An array of suggested actions to take for the account, if any. An empty array means no actions are suggested.
+     * @throws \Box_Exception
+     */
     public function getHostingServerAccounts(int $serverId): array
     {
         $hostingServerModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $serverId, 'Server not found');
@@ -89,7 +103,10 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $hostingAccounts;
     }
 
-    public function suggestActions(array $hostingAccounts): array
+    /**
+     * Suggests actions to take for a given hosting account
+     */
+    private function suggestActions(array $hostingAccounts): array
     {
         $fossbillingHostingAccount = $hostingAccounts['fossbilling'];
         $serverAccount = $hostingAccounts['server'];
@@ -129,6 +146,11 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $suggested;
     }
 
+    /**
+     * Get the server manager for a given hosting server
+     * @param \Model_ServiceHostingServer $serverModel The hosting server model
+     * @return object The server manager for the hosting server
+     */
     private function getHostingServerManager($serverModel): object
     {
         $service = $this->di['mod_service']('servicehosting');
@@ -137,7 +159,12 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         return $serverManager;
     }
 
-    private function hostingServerManagerSupportsSync($serverManager): bool
+    /**
+     * Check if a given server manager supports synchronizing account data
+     * @param object $serverManager The server manager object
+     * @return bool True if the server manager supports synchronizing account data, false otherwise
+     */
+    public function hostingServerManagerSupportsSync($serverManager): bool
     {
         return method_exists($serverManager, 'listAccounts');
     }
