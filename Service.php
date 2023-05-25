@@ -34,7 +34,8 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
         $servers = [];
         foreach ($serverPairs as $id => $name) {
-            $manager = $this->getHostingServerManager($this->getHostingServerById($id));
+            $hostingServerModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $id, 'Server not found');
+            $manager = $this->getHostingServerManager($hostingServerModel);
             $servers[] = [
                 'id' => $id,
                 'name' => $name,
@@ -50,7 +51,8 @@ class Service implements \FOSSBilling\InjectionAwareInterface
 
     public function getHostingServerAccounts($id): array
     {
-        $serverManager = $this->getHostingServerManager($this->getHostingServerById($id));
+        $hostingServerModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $id, 'Server not found');
+        $serverManager = $this->getHostingServerManager($hostingServerModel);
         
         if (!$this->hostingServerManagerSupportsSync($serverManager)) {
             throw new \Box_Exception('This server manager does not support synchronizing accounts');
@@ -133,13 +135,6 @@ class Service implements \FOSSBilling\InjectionAwareInterface
         }
 
         return $suggested;
-    }
-
-    private function getHostingServerById($id): object
-    {
-        $serverModel = $this->di['db']->getExistingModelById('ServiceHostingServer', $id, 'Server not found');
-
-        return $serverModel;
     }
 
     private function getHostingServerManager($serverModel): object
